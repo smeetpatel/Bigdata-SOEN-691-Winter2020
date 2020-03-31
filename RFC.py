@@ -3,19 +3,18 @@ from pandas import read_csv
 from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import precision_score
+from sklearn.decomposition import PCA
 
+
+#FilePaths of training and test dataSet
 x_filepath="C:\\Users\\Sahana\\Desktop\\BigData\\HARDataset\\train\\X_train.txt"
 y_filepath="C:\\Users\\Sahana\\Desktop\\BigData\\HARDataset\\train\\y_train.txt"
-
 X_test_path="C:\\Users\\Sahana\\Desktop\\BigData\\HARDataset\\test\\X_test.txt"
 y_test_path="C:\\Users\\Sahana\\Desktop\\BigData\\HARDataset\\test\\y_test.txt"
 
 
+#training
 X_train = pd.read_csv(x_filepath, header=None,names=['columheader'], sep='\t' )
-
-
 y_train = pd.read_csv(y_filepath, header=None, delim_whitespace=True)
 #print(X_train.head())
 
@@ -23,25 +22,6 @@ y_train = pd.read_csv(y_filepath, header=None, delim_whitespace=True)
 x_test=pd.read_csv(X_test_path, header=None,names = ['columnheader1'],sep ='\t')
 y_test=read_csv(y_test_path, header=None, delim_whitespace=True)
 #print(x_test)
-'''
-rfClassifier = RandomForestClassifier(n_estimators=20, random_state=0)
-rfClassifier.fit(X_train, y_train.values.ravel())
-y_pred = rfClassifier.predict(x_test)
-acc=accuracy_score(y_test, y_pred)*100
-#print("acc:", acc)
-rec=recall_score(y_test, y_pred,average='weighted')*100
-#print("rec:", rec)
-
-pre=precision_score(y_test, y_pred, average='weighted')*100
-#print("pre:", pre)
-
-'''
-
-
-df1_mean=X_train.filter([1, 2, 3, 41, 42, 43, 81, 82, 83, 121, 122, 123, 161, 162, 163, 201, 214, 227, 240, 253, 266, 267, 268, 345, 346, 347, 424, 425, 426, 503, 516, 529, 542])
-#print(df1_mean)
-
-
 
 h1 = open('C:/Users/Sahana/Desktop/BigData/HARDataset/features.txt','r').read().split('\n')[:-1]
 header_list = [i.split()[1] for i in h1]
@@ -59,7 +39,6 @@ x_test.columns = header_list
 
 X_train_fil = X_train.filter(like='-mean()', axis=1)
 #print(X_train_fil.head())
-
 x_test_fil = x_test.filter(like='-mean()', axis=1)
 #print(x_test_fil.head())
 
@@ -74,15 +53,42 @@ print("FS1 with RFC")
 print(metrics.f1_score(y_test, predict_fs1, average=None))
 print(metrics.confusion_matrix(y_test, predict_fs1, normalize='all'))
 
-dfColm_path="C:\\Users\\Sahana\\Desktop\\BigData\\HARDataset\\features.txt"
-af_coln = pd.read_csv(dfColm_path, header=None, delim_whitespace=True)
-value1 = af_coln.filter([1]).transpose()
 
 
-#df=pd.merge(value1, X_train)
-#print(type(value1))
-#print(value1)
+X_train_fs2 = X_train.loc[:, [column_name for column_name in list(X_train.columns) if 'mean()' in column_name or 'std()' in column_name or 'max()' in column_name or 'min()' in column_name]]
+X_test_fs2 = x_test.loc[:, [column_name for column_name in list(x_test.columns) if 'mean()' in column_name or 'std()' in column_name or 'max()' in column_name or 'min()' in column_name]]
+#print(X_test_fs2)
+rfClassifier_2 = RandomForestClassifier(n_estimators=20, random_state=0)
+rfClassifier_fit_2 = rfClassifier_2.fit(X_train_fs2, y_train.values.ravel())
+predict_fs2=rfClassifier_fit_2.predict(X_test_fs2)
+#print(predict_fs2)
+
+acc = accuracy_score(y_test, predict_fs2)*100
+print("acc:", acc)
+print("FS2 with RFC")
+print(metrics.f1_score(y_test, predict_fs2, average=None))
+print(metrics.confusion_matrix(y_test, predict_fs2, normalize='all'))
 
 
-#print(X_train)
-#print(value1)
+pca = PCA(.99)
+pca.fit(X_train)
+#print('\n')
+#print(pca.n_components_)
+X_train_fs3 = pca.transform(X_train)
+X_fs3_test = pca.transform(x_test)
+
+
+rfClassifier_3 = RandomForestClassifier(n_estimators=20, random_state=0)
+rfClassifier_fit_3 = rfClassifier_3.fit(X_train_fs3, y_train.values.ravel())
+predict_fs3=rfClassifier_fit_3.predict(X_fs3_test)
+#print(predict_fs2)
+
+acc = accuracy_score(y_test, predict_fs3)*100
+print("acc:", acc)
+print("FS3 with RFC")
+print(metrics.f1_score(y_test, predict_fs3, average=None))
+print(metrics.confusion_matrix(y_test, predict_fs3, normalize='all'))
+
+
+
+
