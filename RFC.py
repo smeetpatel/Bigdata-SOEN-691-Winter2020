@@ -1,7 +1,7 @@
 import pandas as pd
 from pandas import read_csv
 from sklearn import metrics
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, BaggingClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.decomposition import PCA
 
@@ -41,11 +41,11 @@ x_test.columns = header_list
 #Feature Set Extraction
 
 #Feature Set 1: Creating first feature set with only mean()-columns for training and testing dataset
-X_train_fil = X_train.filter(like='-mean()', axis=1)
+X_train_fil = X_train
 #print(X_train_fil.head())
-x_test_fil = x_test.filter(like='-mean()', axis=1)
+x_test_fil = x_test
 #print(x_test_fil.head())
-rfClassifier = RandomForestClassifier(n_estimators=20, random_state=0)
+rfClassifier = RandomForestClassifier(n_estimators=50, random_state=0)
 rfClassifier_fit = rfClassifier.fit(X_train_fil, y_train.values.ravel())
 predict_fs1=rfClassifier_fit.predict(x_test_fil)
 print(predict_fs1)
@@ -79,7 +79,7 @@ print(metrics.confusion_matrix(y_test, predict_fs2, normalize='all'))
 pca = PCA(.99)
 pca.fit(X_train)
 #print('\n')
-#print(pca.n_components_)
+print(pca.n_components_)
 X_train_fs3 = pca.transform(X_train)
 X_fs3_test = pca.transform(x_test)
 rfClassifier_3 = RandomForestClassifier(n_estimators=20, random_state=0)
@@ -93,3 +93,22 @@ print("acc:", acc)
 print("FS3 with RFC")
 print(metrics.f1_score(y_test, predict_fs3, average=None))
 print(metrics.confusion_matrix(y_test, predict_fs3, normalize='all'))
+
+
+#BaggingClassifier
+X_train_Baggfil = X_train
+#print(X_train_fil.head())
+x_test_baggfil = x_test
+#print(x_test_fil.head())
+baggClass =  BaggingClassifier(n_estimators=100)
+baggClass_fit = baggClass.fit(X_train_Baggfil, y_train.values.ravel())
+predict_bagg=baggClass_fit.predict(x_test_baggfil)
+print(predict_bagg)
+#AccuracyScore
+acc = accuracy_score(y_test, predict_bagg)*100
+print("acc:", acc)
+#F1_score accuracy
+print("Baggingclassifier Score")
+print(metrics.f1_score(y_test, predict_bagg, average=None))
+print(metrics.confusion_matrix(y_test, predict_bagg, normalize='all'))
+
