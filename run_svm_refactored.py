@@ -7,6 +7,7 @@ from pyspark.mllib.classification import SVMWithSGD
 from pyspark.mllib.evaluation import MulticlassMetrics
 from pyspark.sql.types import StructType, StructField, FloatType
 import numpy as np
+import random
 import plot
 
 # Initialize a spark session.
@@ -26,6 +27,11 @@ def change_label(i,x):
 
 def model_per_class(i, labelled_training_data):
     one_against_rest_data = labelled_training_data.map(lambda x: change_label(i, x))
+    ones = one_against_rest_data.filter(lambda x: x.label == 1)
+    zeros = one_against_rest_data.filter(lambda x: x.label == 0)
+    lis = random.sample(range(zeros.count()), ones.count())
+    zeros = zeros.zipWithIndex().filter(lambda x: x[1] in lis).map(lambda x: x[0])
+    one_against_rest_data = ones.union(zeros)
     model = SVMWithSGD.train(one_against_rest_data, iterations=10000)
     model.clearThreshold()
     return model
@@ -44,7 +50,7 @@ if __name__ == '__main__':
     data_headers = open("./data/features.txt", "r").read().split("\n")[:-1]
     data_headers = [i.split()[1] for i in data_headers]
 
-    # create data frame with apt. headers
+    # create dataframe with apt. headers
     print("Preparing training and testing data")
     training_data = training_data.map(lambda x: string_split(x))
     training_df = training_data.toDF(data_headers)
@@ -88,7 +94,8 @@ if __name__ == '__main__':
 
     # make predictions for testing data
     print("Making predictions.\n")
-    predictions = labelled_testing_data.map(lambda x: (float(np.argmax([model.predict(x.features) for model in models]) + 1), x.label))
+    predictions = labelled_testing_data.map(
+        lambda x: (float(np.argmax([model.predict(x.features) for model in models]) + 1), x.label))
     print("Predictions completed.\n")
 
     # calculate precision, recall, and f-measure
@@ -97,7 +104,7 @@ if __name__ == '__main__':
 
     print("F-Measure: ", metrics.fMeasure())
     print("Confusion matrix\n\n")
-    plot.plot_confusion_matrix(metrics.confusionMatrix().toArray(), "cm1_normal.png")
+    plot.plot_confusion_matrix(metrics.confusionMatrix().toArray(), "cm1_refactored.png")
 
     for i in range(1, 7):
         print("Precision for ", i, " is ", metrics.precision(i))
@@ -106,7 +113,7 @@ if __name__ == '__main__':
         precision.append(metrics.precision(i))
         recall.append(metrics.recall(i))
         fmeasure.append(metrics.fMeasure(float(i)))
-    plot.plot_per_activity_metric(precision, recall, fmeasure, "fs1_normal.png")
+    plot.plot_per_activity_metric(precision, recall, fmeasure, "fs1_refactored.png")
     precision = []
     recall = []
     fmeasure = []
@@ -142,7 +149,7 @@ if __name__ == '__main__':
 
     print("F-Measure: ", metrics.fMeasure())
     print("Confusion matrix\n\n")
-    plot.plot_confusion_matrix(metrics.confusionMatrix().toArray(), "cm2_normal.png")
+    plot.plot_confusion_matrix(metrics.confusionMatrix().toArray(), "cm2_refactored.png")
 
     for i in range(1, 7):
         print("Precision for ", i, " is ", metrics.precision(i))
@@ -151,4 +158,4 @@ if __name__ == '__main__':
         precision.append(metrics.precision(i))
         recall.append(metrics.recall(i))
         fmeasure.append(metrics.fMeasure(float(i)))
-    plot.plot_per_activity_metric(precision, recall, fmeasure, "fs2_normal.png")
+    plot.plot_per_activity_metric(precision, recall, fmeasure, "fs2_refactored.png")
