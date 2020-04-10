@@ -20,15 +20,15 @@ def init_spark():
         .getOrCreate()
     return spark
 
-
+# Helper function to read data
 def string_split(x):
     return x['value'].split()
 
-
+# Helper function for creating LabeledPoint
 def change_label(i, x):
     return LabeledPoint(1 if x.label == i else 0, x.features)
 
-
+# Helper function for training the SVM model
 def model_per_class(i, labelled_training_data):
     one_against_rest_data = labelled_training_data.map(lambda x: change_label(i, x))
     ones = one_against_rest_data.filter(lambda x: x.label == 1)
@@ -116,6 +116,7 @@ if __name__ == '__main__':
         confusion_matrix_filename = str(participant) + "_" + "cm_refactored.png"
         plot.plot_confusion_matrix(metrics.confusionMatrix().toArray(), confusion_matrix_filename)
 
+        # print Precision and Recall for all the activities
         for i in range(1, 7):
             print("Precision for ", i, " is ", metrics.precision(i))
             print("Recall for ", i, " is ", metrics.recall(i))

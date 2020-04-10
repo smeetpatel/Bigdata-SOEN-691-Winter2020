@@ -1,13 +1,9 @@
-from pyspark.rdd import RDD
-from pyspark.sql import Row
-from pyspark.sql import DataFrame
+import plot
+import numpy as np
 from pyspark.sql import SparkSession
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.mllib.classification import SVMWithSGD
 from pyspark.mllib.evaluation import MulticlassMetrics
-from pyspark.sql.types import StructType, StructField, FloatType
-import numpy as np
-import plot
 
 # Initialize a spark session.
 def init_spark():
@@ -18,12 +14,15 @@ def init_spark():
         .getOrCreate()
     return spark
 
+# Helper function to read data
 def string_split(x):
     return x['value'].split()
 
+# Helper function for creating LabeledPoint
 def change_label(i,x):
     return LabeledPoint(1 if x.label==i else 0, x.features)
 
+# Helper function for training the SVM model
 def model_per_class(i, labelled_training_data):
     one_against_rest_data = labelled_training_data.map(lambda x: change_label(i, x))
     model = SVMWithSGD.train(one_against_rest_data, iterations=10000)
@@ -144,6 +143,7 @@ if __name__ == '__main__':
     print("Confusion matrix\n\n")
     plot.plot_confusion_matrix(metrics.confusionMatrix().toArray(), "cm2_normal.png")
 
+    # print Precision and Recall for all the activities
     for i in range(1, 7):
         print("Precision for ", i, " is ", metrics.precision(i))
         print("Recall for ", i, " is ", metrics.recall(i))
