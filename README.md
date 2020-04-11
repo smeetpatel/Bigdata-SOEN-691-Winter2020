@@ -47,7 +47,8 @@ The dataset that we are using is 'Human Activity Recognition using a smartphone'
 - Each instance is normalized between -1 to 1.
 - Fairly balanced dataset.
 
-- [Human Activity Recognition using Smartphone devices dataset](https://archive.ics.uci.edu/ml/datasets/human+activity+recognition+using+smartphones)
+
+[Human Activity Recognition using Smartphone devices dataset](https://archive.ics.uci.edu/ml/datasets/human+activity+recognition+using+smartphones)
 
 ###### Technologies
 - PySpark (Apache Spark)
@@ -66,17 +67,45 @@ Models were developed for each of the three algorithms using two feature sets as
 
 As both, precision and recall, are important measures for this task, we evaluated all our model using F1-score as it is a harmonic mean of precision and recall.
 
-Moreover, to test the robustness of the algorithms for this task we performed subject cross validation, i.e. leave out one participant's activities as the test set and use data of the rest of participants as the training set. The overall performance for subject cross validation is represented as average F1-score for all 30 participants.
+Moreover, to test the robustness of all the three algorithms for this task we performed subject cross validation, i.e. leave out one participant's activities as the test set and use data of the rest of participants as the training set. The overall performance for subject cross validation is represented as average F1-score for all 30 participants.
+
+###### k-Nearest Neighbours
+k-NN is implemented using Scikit-learn library. The performance of the k-NN model is evaluated thrice. Initially, k-NN is applied on the test data set. Furthermore, to better evaluate the performance of k-NN on unseen data 10-fold validation is applied. Since we are dealing with time-series data we also checked the performance with TimeSeriesSplit.
+
+###### Random Forests
+Initially, we did classification with the default parameters of the random forest classifier of sklearn library. To better test the performance of the trained model, we applied 10-fold cross validation with TimeSeriesSplit. To improve the results and for parameter tuning, we applied a random search implementation of scikit-learn that uses cross validation with TimeSeriesSplit. 
 
 ###### Support Vector Machines
-Support vector machine with linear kernel was implemented using MLlib of PySpark. PySpark only supports linear kernel with SVM and because PySpark's implementation of SVM only supports binary classification, we implemented it using 'one-vs-rest' approach. However, expectedly that ran us into the problem of class imbalance. So to solve that problem we undersampled the majority class which improved the result by 3.5% (i.e. F1-score from to 0.911 0.942).
+Support vector machine with linear kernel was implemented using MLlib of PySpark. PySpark only supports linear kernel with SVM and because PySpark's implementation of SVM only supports binary classification, we implemented it using 'one-vs-rest' approach. However, expectedly that ran us into the problem of class imbalance. So to solve that problem we undersampled the majority class which improved the result by 3.5%.
 
 ## Results
+The results obtained with k-NN are as follows:
+Model setting | Feature set 1   | Feature set 2
+------------- | --------------  | --------------
+k-NN model without cross validation |   0.891   |   0.902
+k-NN model with k-fold   |   0.910   |0.916
+k-NN model with TimeSeriesSplit |   0.864   |   0.884
+
+The results obtained with Random Forests are as follows:
+Model setting | Feature set 1   | Feature set 2
+------------- | --------------  | --------------
+RF model without cross validation |   0.909   |   0.925
+RF model with 10-fold with TimeSeriesSplit   |   0.887   |0.905
+RF model with Random Search hyperparameter tuning |   0.903   |   0.922
+
+The results obtained with Support Vector Machines are as follows:
+Model setting | Feature set 1   | Feature set 2
+------------- | --------------  | --------------
+SVM model without undersampling majority class  |   |   
+SVM model with undersampling of majority class  |   |
+
 Performance comparison of the three selected algorithms is as follows:
 Algorithm | F1-Score on test data set using feature set 1 | F1-Score on test data set using feature set 2 | Avg. F1-Score in subject cross validation
 --------- | --------------------------------------------- | --------------------------------------------- | ------------------------------------------
-k-Nearest Neighbours      |       0.842                                         |       0.902                                         |       0.839
-Random Forests |        0.903                                   |       0.922                                         |           **0.928**
+k-Nearest Neighbours      |       0.891                                         |       0.902                                         |       0.839
+Random Forests |        0.909                                   |       0.925                                         |           **0.928**
 Support Vector Machine  |       0.910 |       **0.942** |       0.918
 
 While the SVM with linear kernel outperforms the other two algorithm on test set when using all the 561 features, it fails to generalize the same way with different participants in subject cross validation. Whereas, the Random Forests maintained a consistent performance with different participants in subject cross validation.
+
+Performing subject cross validation for all the three algorithms reveal an important insight that all these algorithms perform particularly bad for participant number 14. This goes to highlight that peculiar type of movements by different participants affects the results and hence, dataset with wider range of participants can help better accomadate these variance.
