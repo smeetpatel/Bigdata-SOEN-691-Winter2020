@@ -11,34 +11,34 @@ from sklearn.model_selection import TimeSeriesSplit
 
 
 # Spliting features.txt to get headers for the data
-h1 = open('/features.txt','r').read().split('\n')[:-1]
+h1 = open('./data/features.txt','r').read().split('\n')[:-1]
 header_list = [i.split()[1] for i in h1]
 
 # Reading training dataset with headers column
-X_train = pd.read_csv('/X_train.txt', header=None, names=['column1'], sep='\t')
+X_train = pd.read_csv('./data/train/X_train.txt', header=None, names=['column1'], sep='\t')
 X_train = X_train['column1'].str.split("\s{1,}", expand=True)
 X_train.drop(X_train.columns[0], inplace=True, axis=1)
 X_train.columns = header_list
 
 # Reading training target label
-y_train = pd.read_csv('/y_train.txt', header=None)
+y_train = pd.read_csv('./data/train/y_train.txt', header=None)
 
 
 # Reading testing dataset with headers column
-X_test = pd.read_csv('/X_test.txt', header=None, names=['column2'], sep='\t')
+X_test = pd.read_csv('./data/test/X_test.txt', header=None, names=['column2'], sep='\t')
 X_test = X_test['column2'].str.split("\s{1,}", expand=True)
 X_test.drop(X_test.columns[0], inplace=True, axis=1)
 X_test.columns = header_list
 
 # Reading testing target label
-y_test = pd.read_csv('/y_test.txt', header=None)
+y_test = pd.read_csv('./data/test/y_test.txt', header=None)
 
 X_dataset = pd.concat([X_train, X_test])
 Y_dataset = pd.concat([y_train,y_test])
 
 # Reading the subject file for subject CV
-subj_train = pd.read_csv('/subject_train.txt', header=None, names=['subject'])
-subj_test = pd.read_csv('/subject_test.txt', header=None, names=['subject'])
+subj_train = pd.read_csv('./data/train/subject_train.txt', header=None, names=['subject'])
+subj_test = pd.read_csv('./data/test/subject_test.txt', header=None, names=['subject'])
 subj = pd.concat([subj_train, subj_test])
 X_dataset['subject'] = subj.values
 Y_dataset['subject'] = subj.values
